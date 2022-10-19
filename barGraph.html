@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+
+    <h1>Average Temperature In December 2001</h1>
+
+    <!-- Create a div where the graph will take place -->
+    <div id="my_dataviz"></div>
+  </head>
+  <style>
+    .resize{
+      width: 400px;
+      height: auto;
+    }
+  </style>
+
+  <body>
+    <script>
+      // set the dimensions and margins of the graph
+      var margin = { top: 30, right: 30, bottom: 70, left: 60 },
+        width = 460 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+      // append the svg object to the body of the page
+      var svg = d3
+        .select("#my_dataviz")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // Parse the Data
+      d3.csv("ContinentTemp.csv", function (data) {
+        // X axis
+        var x = d3
+          .scaleBand()
+          .range([0, width])
+          .domain(
+            data.map(function (d) {
+              return d.Continent;
+            })
+          )
+          .padding(0.2);
+        svg
+          .append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x))
+          .selectAll("text")
+          .attr("transform", "translate(-10,0)rotate(-45)")
+          .style("text-anchor", "end");
+
+        // Add Y axis
+        var y = d3.scaleLinear().domain([-30, 80]).range([height, 0]);
+        svg.append("g").call(d3.axisLeft(y));
+
+        // Bars
+        svg
+          .selectAll("mybar")
+          .data(data)
+          .enter()
+          .append("rect")
+          .attr("x", function (d) {
+            return x(d.Continent);
+          })
+          .attr("y", function (d) {
+            return y(d.Temp);
+          })
+          .attr("width", x.bandwidth())
+          .attr("height", function (d) {
+            return height - y(d.Temp);
+          })
+          .attr("fill", function (d) {
+            if (d.Temp >= 60) {
+              return "#F4F188";
+            }
+            if (d.Temp >= 40) {
+              return "#BD392E ";
+            }
+            if (d.Temp >= 20) {
+              return "#2547B0";
+            } else {
+              return "black";
+            }
+          });
+        svg
+          .append("text")
+          .attr("class", "y label")
+          .attr("text-anchor", "end ")
+          .attr("y", -40)
+          .attr("dy", ".75em")
+          .attr("transform", "rotate(-90)")
+          .text("Temperature (Fahrenheit)");
+      });
+    </script>
+    
+  </body>
+</html>
