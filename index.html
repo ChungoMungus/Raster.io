@@ -1,0 +1,89 @@
+<html>
+  <head>
+    <h3>Raster Source: https://neo.gsfc.nasa.gov/view.php?datasetId=MOD_LSTD_CLIM_M</h3>
+    <h1>Hypothesis: Africa had the highest average temperature in December of 2001</h1>
+  </head>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
+  <style>
+    .resize {
+      width: 400px;
+      height: auto;
+    }
+  </style>
+
+  <body>
+    <div id="vis"></div>
+    <div>
+      <svg id="my_dataviz" height=200 width=450></svg>
+    </div>
+    <script>
+      async function renderVis() {
+        // all vis code goes here
+        let tiff = await d3
+          .buffer("temp.tiff")
+          .then((buffer) => GeoTIFF.fromArrayBuffer(buffer));
+        let image = await tiff.getImage();
+        let rasters = await image.readRasters();
+        let values = rasters[0];
+        let w = image.getWidth(),
+          h = image.getHeight();
+
+        let scaling = Math.min(
+          (window.innerWidth * 0.9) / w,
+          (window.innerHeight * 0.9) / h
+        );
+        let width = w * scaling,
+          height = h * scaling;
+
+        let svg = d3
+          .select("#vis")
+          .append("svg")
+          .attr("width", width)
+          .attr("height", height);
+
+        let contours = d3.contours().size([w, h]);
+        let contourData = contours(values);
+
+        //let colorScale = d3.scaleSequntial()
+        //   .domain(d3.extent(values)).range(["aqua","black"]);
+        //d3.interpolateViridis
+        //d3.interpolateCubehelixDefault
+        //d3.interpolateRgbBasis(["red", "green", "blue"])(0.5)
+        let colorScale = d3.scaleSequential(
+          d3.extent(values),
+          d3.interpolateInferno
+        );
+
+        let path = d3.geoPath();
+        let elevations = svg.selectAll(".elevations").data(contourData);
+        elevations
+          .enter()
+          .append("path")
+          .attr("class", "elevations")
+          .attr("fill", (d) => colorScale(d.value))
+          .attr("stroke", "black")
+          .attr("stroke-width", 0.1)
+          .style("opacity", 1)
+          .attr("d", (d) => path(d))
+          .attr("transform", `scale(${scaling})`);
+
+          // svg.append("circle").attr("cx", 0).attr("cy", 0).attr("r", 6).style("fill", "#4e63ad")
+          //   svg.append("circle").attr("cx", 20).attr("cy", 0).attr("r", 6).style("fill", "#99183d")
+          //   svg.append("text").attr("x", 20).attr("y", 0).text("Best Actor").style("font-size", "15px").attr("alignment-baseline", "left")
+          //   svg.append("text").attr("x", 0).attr("y", 0).text("Best Actress").style("font-size", "15px").attr("alignment-baseline", "left")
+      }
+      renderVis();
+      var svg = d3.select("#my_dataviz")
+
+// Handmade legend
+svg.append("circle").attr("cx",50).attr("cy",60).attr("r", 6).style("fill", "#000004")
+svg.append("circle").attr("cx",50).attr("cy",90).attr("r", 6).style("fill", "#fcffa4")
+svg.append("text").attr("x", 70).attr("y", 30).text("Average Temperatures of the World in 2001").style("font-size", "15px").attr("alignment-baseline","middle")
+svg.append("text").attr("x", 70).attr("y", 60).text("Coldest Temperatures").style("font-size", "15px").attr("alignment-baseline","middle")
+svg.append("text").attr("x", 70).attr("y", 90).text("Warmest Temperatures").style("font-size", "15px").attr("alignment-baseline","middle")          
+    </script>
+    <img src="bargraph.png" alt="" srcset="">
+  </body>
+</html>
